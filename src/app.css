@@ -1,0 +1,236 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Base ── */
+html { scroll-behavior: smooth; }
+
+body {
+  background-color: #050505;
+  color: white;
+  font-family: 'Space Grotesk', sans-serif;
+  overflow-x: hidden;
+}
+
+/* ── Glitch Text ── */
+.glitch-text {
+  position: relative;
+}
+.glitch-text::before,
+.glitch-text::after {
+  content: attr(data-text);
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+}
+.glitch-text::before {
+  animation: glitch-1 2.5s infinite linear alternate-reverse;
+  color: #FF003C;
+  z-index: -1;
+}
+.glitch-text::after {
+  animation: glitch-2 3s infinite linear alternate-reverse;
+  color: #13ec49;
+  z-index: -2;
+}
+
+@keyframes glitch-1 {
+  0%   { clip-path: inset(20% 0 80% 0); transform: translate(-2px, 0); }
+  20%  { clip-path: inset(60% 0 10% 0); transform: translate(2px, 0); }
+  40%  { clip-path: inset(40% 0 50% 0); transform: translate(-1px, 0); }
+  60%  { clip-path: inset(80% 0 5% 0);  transform: translate(1px, 0); }
+  80%  { clip-path: inset(10% 0 70% 0); transform: translate(-2px, 0); }
+  100% { clip-path: inset(30% 0 20% 0); transform: translate(0, 0); }
+}
+@keyframes glitch-2 {
+  0%   { clip-path: inset(50% 0 30% 0); transform: translate(2px, 0); }
+  20%  { clip-path: inset(10% 0 60% 0); transform: translate(-2px, 0); }
+  40%  { clip-path: inset(70% 0 20% 0); transform: translate(1px, 0); }
+  60%  { clip-path: inset(30% 0 50% 0); transform: translate(-1px, 0); }
+  80%  { clip-path: inset(5% 0 80% 0);  transform: translate(2px, 0); }
+  100% { clip-path: inset(60% 0 10% 0); transform: translate(0, 0); }
+}
+
+/* ── Scanlines overlay ── */
+.scanlines {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent 2px,
+    rgba(0,0,0,0.15) 2px,
+    rgba(0,0,0,0.15) 4px
+  );
+  opacity: 0.2;
+}
+
+/* ── Vignette ── */
+.vignette {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9997;
+  background: radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.7) 100%);
+}
+
+/* ── Animated scanline sweep ── */
+.scanline-sweep {
+  pointer-events: none;
+  position: fixed;
+  left: 0; right: 0;
+  height: 60px;
+  z-index: 9999;
+  background: linear-gradient(to bottom, transparent, rgba(19,236,73,0.03), transparent);
+  animation: scanline 8s linear infinite;
+}
+@keyframes scanline {
+  0%   { top: -60px; }
+  100% { top: 100vh; }
+}
+
+/* ── Scroll reveal ── */
+.reveal-on-scroll {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity 0.8s cubic-bezier(0.16,1,0.3,1), transform 0.8s cubic-bezier(0.16,1,0.3,1);
+}
+.reveal-on-scroll.section-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── Timeline items ── */
+.timeline-item {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: all 0.8s cubic-bezier(0.16,1,0.3,1);
+}
+.timeline-item.timeline-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── Register button ── */
+.register-btn {
+  position: relative;
+  overflow: hidden;
+}
+.register-btn .btn-label {
+  display: inline-block;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+.register-btn .btn-now {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: translateX(-100%);
+  opacity: 0;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+.register-btn:hover .btn-label {
+  transform: translateX(100%);
+  opacity: 0;
+}
+.register-btn:hover .btn-now {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+/* ── Glassmorphism card ── */
+.glass-card {
+  background: rgba(7,7,10,0.8);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 1rem;
+}
+
+/* ── Primary glow ── */
+.glow-primary {
+  box-shadow: 0 0 20px rgba(19,236,73,0.3), 0 0 60px rgba(19,236,73,0.1);
+}
+.text-glow {
+  text-shadow: 0 0 20px rgba(19,236,73,0.5);
+}
+
+/* ── Corner brackets ── */
+.corner-brackets {
+  position: relative;
+}
+.corner-brackets::before,
+.corner-brackets::after {
+  content: '';
+  position: absolute;
+  width: 12px; height: 12px;
+  border-color: rgba(19,236,73,0.5);
+  border-style: solid;
+}
+.corner-brackets::before {
+  top: -4px; left: -4px;
+  border-width: 2px 0 0 2px;
+}
+.corner-brackets::after {
+  bottom: -4px; right: -4px;
+  border-width: 0 2px 2px 0;
+}
+
+/* ── Nav link hover ── */
+.nav-link {
+  position: relative;
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.7);
+  transition: color 0.2s;
+}
+.nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: -2px; left: 0;
+  width: 0; height: 1px;
+  background: #13ec49;
+  transition: width 0.3s ease;
+}
+.nav-link:hover { color: #13ec49; }
+.nav-link:hover::after { width: 100%; }
+
+/* ── Section gradient line ── */
+.section-line {
+  height: 1px;
+  background: linear-gradient(to right, transparent, #13ec49, transparent);
+  filter: blur(1px);
+}
+
+/* ── Hex decoration ── */
+.hex-text {
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  color: rgba(19,236,73,0.3);
+  letter-spacing: 0.1em;
+  writing-mode: vertical-rl;
+}
+
+/* ── DaisyUI overrides ── */
+.btn-primary {
+  background-color: #13ec49 !important;
+  border-color: #13ec49 !important;
+  color: #050505 !important;
+  font-family: 'Space Mono', monospace;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+.btn-primary:hover {
+  background-color: #0fc43d !important;
+  box-shadow: 0 0 30px rgba(19,236,73,0.4);
+}
+
+/* ── Table overrides ── */
+.table th, .table td {
+  font-family: 'Space Mono', monospace;
+}

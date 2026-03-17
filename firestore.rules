@@ -1,0 +1,28 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Index docs are server-only, never expose to clients
+    match /index/{document} {
+      allow read, write: if false;
+    }
+
+    // Users can only read their own profile, never write directly
+    match /users/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow write: if false;
+    }
+
+    // Levels are server-only (answers must stay hidden)
+    match /levels/{document} {
+      allow read, write: if false;
+    }
+
+    // Users can read their own logs, server handles writes
+    match /logs/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow write: if false;
+    }
+  }
+}
