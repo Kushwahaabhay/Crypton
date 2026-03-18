@@ -1,58 +1,40 @@
 import { redirect } from '@sveltejs/kit';
-import { adminDB } from '@/server/admin';
-
-const collectionRef = adminDB.collection('/levels').orderBy('level');
+import { getAdminDB } from '$lib/server/admin';
 
 let loaded = false;
-let questions = [];
+let questions: any[] = [];
 
-export const load = async ({ locals, setHeaders }) => {
-  setHeaders({ 'cache-control': 'no-store' });
-  if (!locals.userID || !locals.userExists) {
-    return redirect(302, '/ready');
-  }
+export const load = async ({ locals, setHeaders }: any) => {
+    setHeaders({ 'cache-control': 'no-store' });
+    if (!locals.userID || !locals.userExists) return redirect(302, '/ready');
+    if (locals.banned) return redirect(302, '/');
 
-  if (locals.banned) {
-    return redirect(302, '/');
-  }
+    const db = getAdminDB();
+    const userDoc = await db.collection('/users').doc(locals.userID).get();
+    const level = userDoc.data()!.level;
 
-  const userDoc = await adminDB.collection('/users').doc(locals.userID).get();
-  const level = userDoc.data()!.level;
+    const now = new Date();
+    const questionsVisible = now >= new Date("2025-01-03T11:30:00Z") && now <= new Date("2030-01-07T00:00:00Z");
 
-  const now = new Date();
-  const startTime = new Date("2025-01-03T11:30:00Z");
-  const endTime = new Date("2030-01-07T00:00:00Z");
-
-  const questionsVisible = now >= startTime && now <= endTime;
-
-  if (questionsVisible) {
-    if (!loaded) {
-      const querySnapshot = await collectionRef.get();
-      querySnapshot.docs.forEach((d) => {
-        let data = d.data();
-        data['answer'] = null;
-        data['creator'] = null;
-        questions.push(data);
-      });
-
-      collectionRef.onSnapshot((newSnapshot) => {
-        const newQuestions: any[] = [];
-        newSnapshot.docs.forEach((d) => {
-          let newData = d.data();
-          newData['answer'] = null;
-          newData['creator'] = null;
-          newQuestions.push(newData);
+    if (questionsVisible && !loaded) {
+        const collectionRef = db.collection('/levels').orderBy('level');
+        const querySnapshot = await collectionRef.get();
+        questions = querySnapshot.docs.map((d: any) => {
+            const data = d.data();
+            data['answer'] = null;
+            data['creator'] = null;
+            return data;
         });
-        questions = newQuestions;
-        console.log('new update');
-      });
-      loaded = true;
+        collectionRef.onSnapshot((snap: any) => {
+            questions = snap.docs.map((d: any) => {
+                const data = d.data();
+                data['answer'] = null;
+                data['creator'] = null;
+                return data;
+            });
+        });
+        loaded = true;
     }
-  }
 
-  return {
-    userID: locals.userID,
-    questions: questions.slice(0, level),
-  };
+    return { userID: locals.userID, questions: questions.slice(0, level) };
 };
-

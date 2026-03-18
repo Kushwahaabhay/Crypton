@@ -1,91 +1,89 @@
-import {sequence} from "@sveltejs/kit/hooks";
+import { sequence } from "@sveltejs/kit/hooks";
 import * as Sentry from "@sentry/sveltekit";
-import { adminAuth, adminDB } from "$lib/server/admin";
+import { getAdminAuth, getAdminDB } from "$lib/server/admin";
 import type { Handle } from "@sveltejs/kit";
-import {PUBLIC_SENTRY_DSN} from '$env/static/public';
-import { SITE_PASSWORD } from '$env/static/private';
+import { PUBLIC_SENTRY_DSN } from '$env/static/public';
 
-Sentry.init({
-    dsn: PUBLIC_SENTRY_DSN,
-    tracesSampleRate: 1
-})
+Sentry.init({ dsn: PUBLIC_SENTRY_DSN, tracesSampleRate: 1 });
 
-// Cache: uid -> true (user has a profile)
 let existingUsers = new Set<string>();
-// Cache: uid -> true (user is banned)
 let bannedUsers = new Set<string>();
 let indexLoaded = false;
-const userIndexRef = adminDB.collection("index").doc('userIndex');
-const bannedUsersQuery = adminDB.collection("users").where("banned", "==", true);
 
 export const handle = sequence(Sentry.sentryHandle(), (async ({ event, resolve }) => {
-    const sessionCookie = event.cookies.get("__session");
-
-    // Allow the verify API through without password check
-    if (!event.url.pathname.startsWith('/api/verify')) {
-        const verified = event.cookies.get('__verified');
-        if (verified !== '1') {
-            event.locals.userID = null;
-            event.locals.userExists = false;
-            event.locals.banned = false;
-            event.locals.verified = false;
-            return resolve(event);
-        }
+    if (event.url.pathname.startsWith('/api/verify')) {
+        event.locals.verified = true;
+        event.locals.userID = null;
+        event.locals.userExists = false;
+        event.locals.banned = false;
+        return resolve(event);
     }
+
+    const verified = event.cookies.get('__verified');
+    if (verified !== '1') {
+        event.locals.userID = null;
+        event.locals.userExists = false;
+        event.locals.banned = false;
+        event.locals.verified = false;
+        return resolve(event);
+    }
+
     event.locals.verified = true;
+    const db = getAdminDB();
+
     if (!indexLoaded) {
+        const userIndexRef = db.collection("index").doc('userIndex');
+        const bannedUsersQuery = db.collection("users").where("banned", "==", true);
         const doc = await userIndexRef.get();
         const qSnap = await bannedUsersQuery.get();
-        qSnap.docs.forEach((e) => bannedUsers.add(e.id));
+        qSnap.docs.forEach((e: any) => bannedUsers.add(e.id));
         if (doc.exists) {
             const data = doc.data();
-            if (data !== undefined) {
-                Object.keys(data).forEach(uid => existingUsers.add(uid));
-            }
+            if (data) Object.keys(data).forEach(uid => existingUsers.add(uid));
         }
-        userIndexRef.onSnapshot((snap) => {
-            const snapData = snap.data() || {};
-            existingUsers = new Set(Object.keys(snapData));
+        userIndexRef.onSnapshot((snap: any) => {
+            existingUsers = new Set(Object.keys(snap.data() || {}));
         });
-        bannedUsersQuery.onSnapshot((snap) => {
+        bannedUsersQuery.onSnapshot((snap: any) => {
             bannedUsers.clear();
-            snap.docs.forEach((e) => bannedUsers.add(e.id));
+            snap.docs.forEach((e: any) => bannedUsers.add(e.id));
         });
         indexLoaded = true;
     }
 
+    const sessionCookie = event.cookies.get("__session");
+    if (!sessionCookie) {
+        event.locals.userID = null;
+        event.locals.userExists = false;
+        event.locals.banned = false;
+        return resolve(event);
+    }
+
     try {
-        if (sessionCookie === undefined) {
-            event.locals.userID = null;
-            event.locals.userExists = false;
-            event.locals.banned = false;
-            return resolve(event);
-        }
-        const decodedClaims = await adminAuth.verifySessionCookie(sessionCookie!);
+        const auth = getAdminAuth();
+        const decodedClaims = await auth.verifySessionCookie(sessionCookie);
         event.locals.userID = decodedClaims.uid;
-        if (existingUsers.has(event.locals.userID)) {
+        if (existingUsers.has(decodedClaims.uid)) {
             event.locals.userExists = true;
-            event.locals.banned = bannedUsers.has(event.locals.userID);
-            return resolve(event);
+            event.locals.banned = bannedUsers.has(decodedClaims.uid);
         } else {
-            const docRef = adminDB.collection('users').doc(event.locals.userID);
-            const doc = await docRef.get();
+            const doc = await db.collection('users').doc(decodedClaims.uid).get();
             if (doc.exists) {
-                existingUsers.add(event.locals.userID);
+                existingUsers.add(decodedClaims.uid);
                 event.locals.userExists = true;
                 event.locals.banned = doc.data()?.banned === true;
             } else {
                 event.locals.userExists = false;
                 event.locals.banned = false;
             }
-            return resolve(event);
         }
     } catch (e) {
         console.error(e);
         event.locals.userID = null;
         event.locals.userExists = false;
         event.locals.banned = false;
-        return resolve(event);
     }
+    return resolve(event);
 }) satisfies Handle);
+
 export const handleError = Sentry.handleErrorWithSentry();

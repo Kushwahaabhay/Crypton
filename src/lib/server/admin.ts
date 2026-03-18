@@ -1,22 +1,30 @@
 import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
-import { FB_CLIENT_EMAIL, FB_PRIVATE_KEY, FB_PROJECT_ID } from '$env/static/private'
-import pkg from 'firebase-admin';
+import { env } from '$env/dynamic/private';
+import admin from 'firebase-admin';
 
-try {
-    pkg.initializeApp({
-        credential: pkg.credential.cert({
-            projectId: FB_PROJECT_ID,
-            clientEmail: FB_CLIENT_EMAIL,
-            privateKey: FB_PRIVATE_KEY,
-        }),
-    });
-} catch (err) {
-    if (!/already exists/u.test(err.message)) {
-        console.error('Firebase Admin Error: ', err.stack)
+export function getAdminDB() {
+    if (!admin.apps.length) {
+        admin.initializeApp({
+            credential: admin.credential.cert({
+                projectId: env.FB_PROJECT_ID?.trim(),
+                clientEmail: env.FB_CLIENT_EMAIL?.trim(),
+                privateKey: env.FB_PRIVATE_KEY?.trim().replace(/\\n/g, '\n'),
+            }),
+        });
     }
+    return getFirestore();
 }
 
-
-export const adminDB = getFirestore();
-export const adminAuth = getAuth();
+export function getAdminAuth() {
+    if (!admin.apps.length) {
+        admin.initializeApp({
+            credential: admin.credential.cert({
+                projectId: env.FB_PROJECT_ID?.trim(),
+                clientEmail: env.FB_CLIENT_EMAIL?.trim(),
+                privateKey: env.FB_PRIVATE_KEY?.trim().replace(/\\n/g, '\n'),
+            }),
+        });
+    }
+    return getAuth();
+}

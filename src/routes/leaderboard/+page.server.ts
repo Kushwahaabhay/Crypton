@@ -1,35 +1,24 @@
-/** @type {import('./$types').PageLoad} */
-import {adminDB} from "@/server/admin";
+import { getAdminDB } from "$lib/server/admin";
+
 let loaded = false;
-let leaderboard = [];
-let queryDef = adminDB.collection("users").orderBy("level","desc").orderBy("last_change");
+let leaderboard: { username: string; score: number }[] = [];
 
-export const load
-    = (async ({ locals, params }) => {
-        if(!loaded){
-            const qSnap = await queryDef.get();
-            qSnap.docs.forEach((e)=>{
+export const load = async () => {
+    if (!loaded) {
+        const db = getAdminDB();
+        const queryDef = db.collection("users").orderBy("level", "desc").orderBy("last_change");
+        const qSnap = await queryDef.get();
+        leaderboard = qSnap.docs.map((e) => {
+            const data = e.data();
+            return { username: data.username, score: (data.level - 1) * 100 };
+        });
+        queryDef.onSnapshot((snap) => {
+            leaderboard = snap.docs.map((e) => {
                 const data = e.data();
-                leaderboard.push({
-                    username: data.username,
-                    score: (data.level-1) * 100,
-                });
+                return { username: data.username, score: (data.level - 1) * 100 };
             });
-            queryDef.onSnapshot((snap)=>{
-                const newData = [];
-                snap.docs.forEach((e)=>{
-                    const data = e.data();
-                    newData.push({
-                        username: data.username,
-                        score: (data.level-1) * 100,
-                    });
-                });
-                leaderboard = newData;
-            });
-            loaded=true;
-        }
-        return {
-            leaderboard
-        };
-});
-
+        });
+        loaded = true;
+    }
+    return { leaderboard };
+};

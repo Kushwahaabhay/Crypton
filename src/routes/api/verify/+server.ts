@@ -1,21 +1,17 @@
-import { json, error } from '@sveltejs/kit';
-import type { RequestHandler } from './$types';
-import { SITE_PASSWORD } from '$env/static/private';
+import { json } from '@sveltejs/kit';
+import { env } from '$env/dynamic/private';
 import { dev } from '$app/environment';
 
-export const POST: RequestHandler = async ({ request, cookies }) => {
-    const { password } = await request.json();
+export const POST = async ({ request, cookies }: { request: Request, cookies: any }) => {
+    const body = await request.json();
+    const password = body?.password ?? '';
 
-    if (typeof password !== 'string' || password.trim() === '') {
-        return error(400, 'Bad request');
-    }
-
-    if (password.trim() === SITE_PASSWORD) {
+    if (password.trim() === env.SITE_PASSWORD?.trim()) {
         cookies.set('__verified', '1', {
             path: '/',
             httpOnly: true,
             secure: !dev,
-            sameSite: 'strict',
+            sameSite: 'lax',
             maxAge: 60 * 60 * 24 * 365,
         });
         return json({ success: true });

@@ -17,3 +17,4 @@ vite.config.ts.timestamp-*
 functions/venv
 # Sentry Config File
 .sentryclirc
+.vercel

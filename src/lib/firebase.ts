@@ -12,12 +12,12 @@ import {
 } from '$env/static/public';
 
 const firebaseConfig = {
-    apiKey: PUBLIC_FB_API_KEY,
-    authDomain: PUBLIC_FB_AUTH_DOMAIN,
-    projectId: PUBLIC_FB_PROJECT_ID,
-    storageBucket: PUBLIC_FB_STORAGE_BUCKET,
-    messagingSenderId: PUBLIC_FB_MESSAGING_SENDER_ID,
-    appId: PUBLIC_FB_APP_ID,
+    apiKey: PUBLIC_FB_API_KEY.trim(),
+    authDomain: PUBLIC_FB_AUTH_DOMAIN.trim(),
+    projectId: PUBLIC_FB_PROJECT_ID.trim(),
+    storageBucket: PUBLIC_FB_STORAGE_BUCKET.trim(),
+    messagingSenderId: PUBLIC_FB_MESSAGING_SENDER_ID.trim(),
+    appId: PUBLIC_FB_APP_ID.trim(),
 };
 
 // Prevent re-initialization during HMR

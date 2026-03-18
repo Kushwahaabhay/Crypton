@@ -27,15 +27,24 @@
 
     async function signInWithGoogle() {
         isAuthLoading = true;
-        const provider = new GoogleAuthProvider();
-        const credential = await signInWithPopup(auth, provider);
-        const idToken = await credential.user.getIdToken();
-        await fetch('/api/auth', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ idToken }),
-        });
-        await invalidateAll();
+        try {
+            const provider = new GoogleAuthProvider();
+            const credential = await signInWithPopup(auth, provider);
+            const idToken = await credential.user.getIdToken();
+            const r = await fetch('/api/auth', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ idToken }),
+            });
+            if (!r.ok) {
+                const body = await r.text();
+                sendErrorToast('Sign in failed', body || `Error ${r.status}`);
+            } else {
+                await invalidateAll();
+            }
+        } catch (e: any) {
+            sendErrorToast('Sign in error', e?.message ?? 'Unknown error');
+        }
         isAuthLoading = false;
     }
 
@@ -101,7 +110,7 @@
         {#if accState === AccountState.GOOGLE_SIGN_IN}
             <p class="font-mono text-primary text-[10px] tracking-[0.4em] uppercase mb-2">STEP 01</p>
             <h2 class="font-display font-black text-white text-2xl uppercase tracking-widest mb-1">Create Account</h2>
-            <p class="text-white/40 text-xs font-mono mb-8">Use your IITM email for prize eligibility.</p>
+            <p class="text-white/40 text-xs font-mono mb-8">Use your email for prize eligibility.</p>
 
             <button
                 class="w-full flex items-center justify-center gap-3 font-mono text-sm tracking-widest uppercase py-3 border border-white/20 text-white/70 hover:border-primary/50 hover:text-primary transition-all duration-300 disabled:opacity-40"
