@@ -5,6 +5,7 @@ users.json
 /build
 /.svelte-kit
 /package
+/scripts
 .env
 .env.*
 !.env.example

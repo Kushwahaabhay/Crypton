@@ -5,6 +5,7 @@
     import { sendErrorToast, sendSuccessToast } from "$lib/toast_utils";
     import { browser } from "$app/environment";
     import { invalidateAll } from "$app/navigation";
+    import { tick } from "svelte";
     import MatrixRain from "$lib/components/MatrixRain.svelte";
 
     let loading = false;
@@ -31,6 +32,7 @@
                 sendSuccessToast("Level cleared", "Your answer was correct");
                 await invalidateAll();
                 questions = data.questions;
+                answer = "";
                 if (currQuestion < questions.length - 1) currQuestion++;
             } else {
                 sendErrorToast("Wrong answer", "Give it another shot");
@@ -41,9 +43,10 @@
         loading = false;
     };
 
-    const updateComment = () => {
+    const updateComment = async () => {
         if (currQuestionData === null || currQuestionData === undefined) return;
         if (browser) {
+            await tick();
             const e = document.getElementById(";)");
             if (e) {
                 e.innerHTML = "";
@@ -98,7 +101,7 @@
                 <button
                     class="w-9 h-9 border border-white/10 flex items-center justify-center text-white/40 hover:border-primary/50 hover:text-primary transition-all disabled:opacity-20 disabled:cursor-not-allowed"
                     disabled={currQuestion === 0}
-                    on:click={() => { if (currQuestion > 0) currQuestion--; }}
+                    on:click={() => { if (currQuestion > 0) { currQuestion--; answer = ""; } }}
                     aria-label="Previous level"
                 >
                     <ArrowLeft class="w-4 h-4" />
@@ -111,7 +114,7 @@
 
                 <button
                     class="w-9 h-9 border border-white/10 flex items-center justify-center text-white/40 hover:border-primary/50 hover:text-primary transition-all disabled:opacity-20 disabled:cursor-not-allowed"
-                    on:click={() => { if (currQuestion < questions.length - 1) currQuestion++; }}
+                    on:click={() => { if (currQuestion < questions.length - 1) { currQuestion++; answer = ""; } }}
                     disabled={currQuestion === questions.length - 1 || !(userData.completed_levels || []).includes(currQuestionData.uid)}
                     aria-label="Next level"
                 >
@@ -142,9 +145,12 @@
                             {#each currQuestionData.files as f}
                                 <button
                                     class="font-mono text-xs text-primary border border-primary/30 px-3 py-1.5 hover:bg-primary/10 transition-colors"
-                                    on:click={() => open(f.url)}
+                                    on:click={() => {
+                                        const url = typeof f === 'string' ? f : f.url;
+                                        if (url) window.open(url, '_blank', 'noopener,noreferrer');
+                                    }}
                                 >
-                                    {f.name}
+                                    {typeof f === 'string' ? decodeURIComponent(f.split('/').pop()?.split('?')[0] ?? 'File') : (f.name ?? 'File')}
                                 </button>
                             {/each}
                         </div>
@@ -193,11 +199,11 @@
                     </div>
                 {/if}
 
-                <!-- Hidden comment node -->
-                <span id=";)" class="hidden"></span>
             </div>
         </main>
     </Doc>
+    <!-- Hidden comment node (outside Doc to survive re-renders) -->
+    <span id=";)" class="hidden"></span>
 {:else}
     <main class="min-h-screen flex items-center justify-center">
         <p class="font-mono text-white/40 text-sm tracking-widest">// NO LEVELS AVAILABLE //</p>
