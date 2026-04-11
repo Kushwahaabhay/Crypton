@@ -25,7 +25,7 @@
     <div class="glass-card px-6 py-2 flex items-center gap-3">
       <div class="w-16 h-px bg-gradient-to-r from-transparent to-primary/60"></div>
       <span class="font-mono text-[10px] tracking-[0.4em] uppercase text-white/60">
-        Organized by <span class="text-primary">CoddyIO &middot; Team Kivy</span>
+        Organized by <span class="text-primary">Team Kivy</span>
       </span>
       <div class="w-16 h-px bg-gradient-to-l from-transparent to-primary/60"></div>
     </div>

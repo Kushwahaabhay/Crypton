@@ -148,12 +148,12 @@
     <!-- Team -->
     <div class="glass-card p-8 relative overflow-hidden reveal-on-scroll">
       <div class="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent"></div>
-      <h3 class="font-mono text-primary text-xs tracking-[0.3em] uppercase mb-6">The Team</h3>
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+      <h3 class="font-mono text-primary text-xs tracking-[0.3em] uppercase mb-6 text-center">The Team</h3>
+      <div class="grid grid-cols-1 sm:grid-cols-1 gap-6 justify-items-center">
         {#each [
-          { name: 'Team Kivy',     role: 'Level Design'  },
-          { name: 'Team Kivy', role: 'Web Design' },
-          { name: 'Coddy IO',    role: 'Organizer'   },
+          
+          { name: 'Team Kivy', role: 'Kushwaha Abhay'}
+
         ] as member}
           <div class="text-center">
             <div class="w-12 h-12 rounded-full border border-primary/30 bg-primary/5 mx-auto mb-3 flex items-center justify-center">
